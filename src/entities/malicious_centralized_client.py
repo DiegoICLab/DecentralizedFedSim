@@ -1,0 +1,142 @@
+import time
+
+from entities.centralized_client import CentralizeClient
+from utils.utils_logs import *
+from utils.utils_measures import *
+from machine_learning.attacks.utils import(
+    client_label_flipping_attack,
+    client_sign_flipping_attack,
+    client_noise_attack,
+    client_IPM_attack,
+    client_ALIE_attack
+)
+
+class MaliciousCentralizeClient(CentralizeClient):
+    def __init__(self, node_id, ip, port, neighbors, dataset, trainset, testset, rounds, barrier_sim, byz_attack, attack_config ):
+        super().__init__(
+            node_id=node_id,
+            ip=ip,
+            port=port,
+            neighbors=neighbors,
+            dataset=dataset,
+            trainset=trainset,
+            testset=testset,
+            rounds=rounds,
+            barrier_sim=barrier_sim
+        )
+        self.byz_attack = byz_attack
+        self.attack_config = attack_config
+
+        if self.byz_attack == "Label-Flipping":
+            # TODO Check 
+            self.trainset = client_label_flipping_attack(self.trainset, percentage_flip=1)
+            
+    # Main function to start the  centralized training process
+    def run(self):
+        # Start listener threads for each node
+        self.start_listener()
+        for round_num in range(self.rounds):
+            # Training phase
+            log_info_node(self.node_id, f"Round {round_num}. Starting training process...")
+            self.train_local_model(epochs=1)
+
+            # Wait for all client to finish the training phase
+            log_info_node(self.node_id, f"Training finished. Waiting for other clients to complete training...")
+            self.barrier_sim.wait()  # Simulated synchronize with other nodes
+
+            # Compute malicious attack
+            time.sleep(5)
+            log_info_node(self.node_id, f"Computing Byzantine attack ({self.byz_attack})")
+            received_updates = self.get_all_updates_from_queue()
+            self.perform_model_poisoning(received_updates)
+            
+            # Send the model to neighbors
+            log_info_node(self.node_id, f"Sending model to neighbors...")
+            for neighbor in self.neighbors:
+                self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
+
+            # Receiving the global model from server
+            received_server_model = False
+            while True:
+                time.sleep(5)
+                if self.get_num_updates_queue() != 0:
+                    received_updates = self.get_all_updates_from_queue()
+                    for update in received_updates:
+                        if update['node_id'] == self.server_id and update['local_model'] is not None:
+                            received_server_model = True
+                            server_model = update['local_model']
+                            self.set_parameters(server_model)
+                            log_info_node(self.node_id, f"Received global model from server.")
+                            break   
+                if received_server_model:
+                    break
+            
+            # Save the model stats (optional)
+            self.save_statistics()
+
+        log_info_node(self.node_id, f"Training complete!")
+        # num_bytes = get_length_bytes(self.get_parameters())
+        # log_info_node(self.node_id, f"Stored statistics information: {num_bytes} bytes")
+
+    # Main function to start the decentralized training process
+    def run(self):
+        # Start listener threads for each node
+        self.start_listener()
+        for round_num in range(self.rounds):
+            log_info_node(self.node_id, f"Round {round_num}. Starting training process...")
+            # Train the model locally
+            self.train_local_model(epochs=1)
+
+            # Wait for all nodes to finish the training round
+            log_info_node(self.node_id, f"Training finished. Waiting for other nodes to complete training...")
+            self.barrier_sim.wait()  # Synchronize with other nodes
+
+            # Simulate sharing time interval
+            # TODO With this simulated time sharing, model attack will be computed by using only the received models
+            
+
+            log_info_node(self.node_id, f"Sending poisoned model to neighbors...")
+            # Send the model to neighbors
+            for neighbor in self.neighbors:
+                self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
+            
+            # Aggregate the received models into the local model
+            num_received_models = len(received_updates)
+            log_info_node(self.node_id, f"Aggregating models ({self.aggregation_alg})... Received {num_received_models} models.")
+            aggregated_model = self.aggregation_models(received_updates, round_num)
+            if aggregated_model is not None:
+                self.set_parameters(aggregated_model)
+
+            # Save the model stats (optional)
+            self.save_statistics()
+            if self.node_id == 1:
+                acc = self.statistics["accuracy"][-1]
+                model = self.statistics["local_model"][-1]
+                log_info(f"Accuracy: {acc}")
+                log_info(f"Model: {model}")
+
+        log_info_node(self.node_id, f"Training complete!")
+    
+    ############################################################## 
+    # Performing model attacks
+    ##############################################################
+    def perform_model_poisoning(self, received_updates):
+
+        received_models = [update['local_model'] for update in received_updates]
+        if self.byz_attack == "Sign-Flipping":
+            flipped_model = client_sign_flipping_attack(self.get_parameters())
+            self.set_parameters(flipped_model)
+
+        elif self.byz_attack == "Noise":
+            noisy_model = client_noise_attack(self.get_parameters())
+            self.set_parameters(noisy_model)
+        
+        elif self.byz_attack == "IPM":
+            epsilon = float(self.attack_config["epsilon"])
+            computed_model = client_IPM_attack(received_models, epsilon)
+            self.set_parameters(computed_model)
+
+        elif self.byz_attack == "ALIE":
+            zmax = float(self.attack_config["zmax"])
+            computed_model = client_ALIE_attack(received_models, zmax)
+            self.set_parameters(computed_model)
