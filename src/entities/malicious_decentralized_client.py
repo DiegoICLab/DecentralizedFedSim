@@ -32,6 +32,7 @@ class MaliciousDecentralizeClient(DecentralizeClient):
 
         if self.byz_attack == "Label-Flipping":
             # TODO Check 
+            log_info_node(self.node_id, f"Computing {self.byz_attack} attack. Modifying 100% of the training labels.")
             self.trainset = client_label_flipping_attack(self.trainset, percentage_flip=1)
 
     # Main function to start the decentralized training process
@@ -50,7 +51,8 @@ class MaliciousDecentralizeClient(DecentralizeClient):
             # Simulate sharing time interval
             # TODO With this simulated time sharing, model attack will be computed by using only the received models
             time.sleep(5)
-            log_info_node(self.node_id, f"Computing Byzantine attack ({self.byz_attack})")
+            if self.byz_attack != "Label-Flipping":
+                log_info_node(self.node_id, f"Computing Byzantine attack ({self.byz_attack})")
             received_updates = self.get_all_updates_from_queue()
             self.perform_model_poisoning(received_updates)
 

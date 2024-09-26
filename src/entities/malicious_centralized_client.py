@@ -12,12 +12,13 @@ from machine_learning.attacks.utils import(
 )
 
 class MaliciousCentralizeClient(CentralizeClient):
-    def __init__(self, node_id, ip, port, neighbors, dataset, trainset, testset, rounds, barrier_sim, byz_attack, attack_config ):
+    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, trainset, testset, rounds, barrier_sim, byz_attack, attack_config ):
         super().__init__(
             node_id=node_id,
             ip=ip,
             port=port,
             neighbors=neighbors,
+            server_id=server_id,
             dataset=dataset,
             trainset=trainset,
             testset=testset,
@@ -29,6 +30,7 @@ class MaliciousCentralizeClient(CentralizeClient):
 
         if self.byz_attack == "Label-Flipping":
             # TODO Check 
+            log_info_node(self.node_id, f"Computing {self.byz_attack} attack. Modifying 100% of the training labels.")
             self.trainset = client_label_flipping_attack(self.trainset, percentage_flip=1)
             
     # Main function to start the  centralized training process
@@ -46,12 +48,13 @@ class MaliciousCentralizeClient(CentralizeClient):
 
             # Compute malicious attack
             time.sleep(5)
-            log_info_node(self.node_id, f"Computing Byzantine attack ({self.byz_attack})")
+            if self.byz_attack != "Label-Flipping":
+                log_info_node(self.node_id, f"Computing Byzantine attack ({self.byz_attack})")
             received_updates = self.get_all_updates_from_queue()
             self.perform_model_poisoning(received_updates)
             
             # Send the model to neighbors
-            log_info_node(self.node_id, f"Sending model to neighbors...")
+            log_info_node(self.node_id, f"Sending poisoned model to neighbors...")
             for neighbor in self.neighbors:
                 self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
 
@@ -62,7 +65,7 @@ class MaliciousCentralizeClient(CentralizeClient):
                 if self.get_num_updates_queue() != 0:
                     received_updates = self.get_all_updates_from_queue()
                     for update in received_updates:
-                        if update['node_id'] == self.server_id and update['local_model'] is not None:
+                        if str(update['node_id']) == self.server_id and update['local_model'] is not None:
                             received_server_model = True
                             server_model = update['local_model']
                             self.set_parameters(server_model)
@@ -77,45 +80,6 @@ class MaliciousCentralizeClient(CentralizeClient):
         log_info_node(self.node_id, f"Training complete!")
         # num_bytes = get_length_bytes(self.get_parameters())
         # log_info_node(self.node_id, f"Stored statistics information: {num_bytes} bytes")
-
-    # Main function to start the decentralized training process
-    def run(self):
-        # Start listener threads for each node
-        self.start_listener()
-        for round_num in range(self.rounds):
-            log_info_node(self.node_id, f"Round {round_num}. Starting training process...")
-            # Train the model locally
-            self.train_local_model(epochs=1)
-
-            # Wait for all nodes to finish the training round
-            log_info_node(self.node_id, f"Training finished. Waiting for other nodes to complete training...")
-            self.barrier_sim.wait()  # Synchronize with other nodes
-
-            # Simulate sharing time interval
-            # TODO With this simulated time sharing, model attack will be computed by using only the received models
-            
-
-            log_info_node(self.node_id, f"Sending poisoned model to neighbors...")
-            # Send the model to neighbors
-            for neighbor in self.neighbors:
-                self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
-            
-            # Aggregate the received models into the local model
-            num_received_models = len(received_updates)
-            log_info_node(self.node_id, f"Aggregating models ({self.aggregation_alg})... Received {num_received_models} models.")
-            aggregated_model = self.aggregation_models(received_updates, round_num)
-            if aggregated_model is not None:
-                self.set_parameters(aggregated_model)
-
-            # Save the model stats (optional)
-            self.save_statistics()
-            if self.node_id == 1:
-                acc = self.statistics["accuracy"][-1]
-                model = self.statistics["local_model"][-1]
-                log_info(f"Accuracy: {acc}")
-                log_info(f"Model: {model}")
-
-        log_info_node(self.node_id, f"Training complete!")
     
     ############################################################## 
     # Performing model attacks

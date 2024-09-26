@@ -21,7 +21,7 @@ from utils.utils_logs import *
 from utils.utils_measures import *
 
 class CentralizeClient(DistributedNode):
-    def __init__(self, node_id, ip, port, neighbors, dataset, trainset, testset, rounds, barrier_sim ):
+    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, trainset, testset, rounds, barrier_sim ):
         super().__init__(
             node_id=node_id,
             ip=ip,
@@ -32,6 +32,7 @@ class CentralizeClient(DistributedNode):
             testset=testset,
             rounds=rounds
         )
+        self.server_id=server_id
         self.barrier_sim = barrier_sim
 
     # Main function to start the decentralized training process
@@ -59,7 +60,7 @@ class CentralizeClient(DistributedNode):
                 if self.get_num_updates_queue() != 0:
                     received_updates = self.get_all_updates_from_queue()
                     for update in received_updates:
-                        if update['node_id'] == self.server_id and update['local_model'] is not None:
+                        if str(update['node_id']) == self.server_id and update['local_model'] is not None:
                             received_server_model = True
                             server_model = update['local_model']
                             self.set_parameters(server_model)

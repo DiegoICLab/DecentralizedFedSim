@@ -185,7 +185,7 @@ def Clustering_filtering(models):
     if len(models) == 1:
         return []
     
-    # TODO si hay pocos modelos, parece que el cluster más grande devuelve todos
+    # TODO check
     # Compute cosine similarities between vectors
     similarity_matrix = _compute_cosine_similarity_matrix(models)
 
