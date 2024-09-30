@@ -2,55 +2,57 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.transforms import Compose, ToTensor, Normalize
-#from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from tqdm import tqdm
+
+# Code modified from the Flower project on GitHub
+# Repository link: https://github.com/adap/flower
 
 # #############################################################################
 # Regular PyTorch pipeline: nn.Module, train, test, and DataLoader (CIFAR10)
 # #############################################################################
-class CIFAR10_Net(nn.Module):   # Define un modelo de red neuronal, nn.Module es la clase base para todos los modelos en PyTorch
+class CIFAR10_Net(nn.Module):
     """Model (simple CNN adapted from 'PyTorch: 
     A 60 Minute Blitz')"""
-
+    
     def __init__(self, num_classes: int) -> None:   # 62006 parameters with 10 classes
         super(CIFAR10_Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)           # Capa de convolución con 3 canales de entrada, 6 canales de salida y un tamaño de kernel de 5x5.
-        self.pool = nn.MaxPool2d(2, 2)            # Capa de pooling máxima con un tamaño de kernel de 2x2 y un stride de 2.
-        self.conv2 = nn.Conv2d(6, 16, 5)          # Capa de convolución con 6 canales de entrada, 16 canales de salida y un tamaño de kernel de 5x5.
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)     # Capa completamente conectada (fully connected) con 1655 nodos de entrada y 120 nodos de salida.
-        self.fc2 = nn.Linear(120, 84)             # Capa completamente conectada con 120 nodos de entrada y 84 nodos de salida.
-        self.fc3 = nn.Linear(84, num_classes)              # Capa completamente conectada con 84 nodos de entrada y 10 nodos de salida. En el contexto de redes neuronales para clasificación, esta última capa suele tener un número de nodos igual al número de clases en el problema.
+        self.conv1 = nn.Conv2d(3, 6, 5)           # Convolutional layer with 3 input channels, 6 output channels, and a 5x5 kernel size.
+        self.pool = nn.MaxPool2d(2, 2)            # Max pooling layer with a 2x2 kernel size and a stride of 2.
+        self.conv2 = nn.Conv2d(6, 16, 5)          # Convolutional layer with 6 input channels, 16 output channels, and a 5x5 kernel size.
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)     # Fully connected layer with 1655 input nodes and 120 output nodes.
+        self.fc2 = nn.Linear(120, 84)             # Fully connected layer with 120 input nodes and 84 output nodes.
+        self.fc3 = nn.Linear(84, num_classes)     # Fully connected layer with 84 input nodes and 10 output nodes. In classification problems, this layer usually has the same number of nodes as the number of classes.
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:     # Cómo los datos se propagan a través de la red desde la entrada hasta la salida.
-        x = self.pool(F.relu(self.conv1(x)))                # Procesar la entrada x a través de la primera capa convolucional, aplicando la función de activación ReLU y luego realizando un pooling máximo.
-        x = self.pool(F.relu(self.conv2(x)))                # Idem, siguiente capa convolucional
-        x = x.view(-1, 16 * 5 * 5)                          # Aplanamiento de la salida de la segunda capa de pooling para prepararla para la capa completamente conectada. -1 (tamaño de ese eje debe inferirse para mantener el mismo número total de elementos)
-        x = F.relu(self.fc1(x))                             # Aplica la función de activación ReLU a la salida de la primera capa completamente conectada
-        x = F.relu(self.fc2(x))                             # Idem
-        return self.fc3(x)                                  # No hay función de activación, común en problemas de clasificación donde se utiliza la función de pérdida adecuada (como nn.CrossEntropyLoss), que incluye la operación softmax internamente.
+    def forward(self, x: torch.Tensor) -> torch.Tensor:     # How the data flows through the network from input to output.
+        x = self.pool(F.relu(self.conv1(x)))                # Process the input x through the first convolutional layer, applying the ReLU activation function, followed by max pooling.
+        x = self.pool(F.relu(self.conv2(x)))                # Same for the second convolutional layer.
+        x = x.view(-1, 16 * 5 * 5)                          # Flatten the output from the second pooling layer to prepare it for the fully connected layer. -1 means the size of that dimension is inferred to keep the total number of elements constant.
+        x = F.relu(self.fc1(x))                             # Apply ReLU activation to the output of the first fully connected layer.
+        x = F.relu(self.fc2(x))                             # Same for the second fully connected layer.
+        return self.fc3(x)                                  # No activation function here, common in classification problems where the appropriate loss function (e.g., nn.CrossEntropyLoss) includes softmax internally.
 
 
 def train_CIFAR10(net, trainloader, epochs, DEVICE):
     """Train the model on the training set."""
-    loss_fn = torch.nn.CrossEntropyLoss()                                   # Función de pérdida
-    optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)     # Este optimizador ajustará los pesos del modelo durante el entrenamiento para minimizar la pérdida.
+    loss_fn = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     net.train()
-    for _ in range(epochs):                                                   # En cada epoca se recorre todo el conjunto de datos
+    for _ in range(epochs):
         for images, labels in tqdm(trainloader):
-            optimizer.zero_grad()                                                 # Inicializa los gradientes de todos los parámetros del modelo
+            optimizer.zero_grad()
             if DEVICE is not None:
-                loss_fn(net(images.to(DEVICE)), labels.to(DEVICE)).backward()         # Calcula la pérdida entre las predicciones del modelo y las etiquetas reales, y luego propaga hacia atrás los gradientes a través de la red neuronal.
+                loss_fn(net(images.to(DEVICE)), labels.to(DEVICE)).backward()
             else:
-                loss_fn(net(images), labels).backward()         # Calcula la pérdida entre las predicciones del modelo y las etiquetas reales, y luego propaga hacia atrás los gradientes a través de la red neuronal.
-            optimizer.step()                                                      # Actualiza los parámetros del modelo utilizando el optimizador, basándose en los gradientes calculados durante la fase de retropropagación
+                loss_fn(net(images), labels).backward()
+            optimizer.step()
 
 def test_CIFAR10(net, testloader, DEVICE):
     """Validate the model on the test set."""
     loss_fn = torch.nn.CrossEntropyLoss()
     correct, loss = 0, 0.0
     net.eval()
-    with torch.no_grad():                                                       # desactiva el cálculo y seguimiento automático de gradientes
+    with torch.no_grad():
         for images, labels in testloader:
             if DEVICE is not None:
                 outputs = net(images.to(DEVICE))
@@ -59,7 +61,7 @@ def test_CIFAR10(net, testloader, DEVICE):
                 outputs = net(images)
             loss += loss_fn(outputs, labels).item()
             _, predicted = torch.max(outputs.data, 1)
-            correct += (predicted == labels).sum().item()                       # Predicciones correctas en el lote. torch.max(·)[1] para obtener las clases predichas por el modelo.
+            correct += (predicted == labels).sum().item()
     accuracy = correct / len(testloader.dataset)
     average_loss = loss / len(testloader.dataset)
     return accuracy, average_loss
@@ -67,7 +69,7 @@ def test_CIFAR10(net, testloader, DEVICE):
 
 def load_CIFAR10():
     """Load CIFAR-10 (training and test set)."""
-    trf = Compose([ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])        # Define una secuencia de transformaciones que se aplicarán a las imágenes
+    trf = Compose([ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     trainset = CIFAR10("./data", train=True, download=True, transform=trf)
     testset = CIFAR10("./data", train=False, download=True, transform=trf)
     return trainset, testset

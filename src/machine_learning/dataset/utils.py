@@ -3,17 +3,18 @@ from torch.utils.data import DataLoader
 from torch.utils.data import random_split
 from utils.utils_logs import *
 
-# ######################################################################################
-# This function allows to separate and prepare any dataset for clients for simulations
-# ######################################################################################
+# Code modified from the Flower project on GitHub
+# Repository link: https://github.com/adap/flower
 def prepare_dataset(trainset, testset, num_partitions: int, batch_size_client: int, 
                     batch_size_test: int, val_ratio: float = 0.1):
-    """This function partitions the training set into N disjoint
+    """
+    This function partitions the training set into N disjoint
     subsets, each will become the local dataset of a client. This
     function also subsequently partitions each traininset partition
     into train and validation. The test set is left intact and will
     be used by the central server to asses the performance of the
-    global model."""
+    global model.
+    """
 
     log_info(f"Trainset: {len(trainset)} samples, Testset: {len(testset)} samples.")
 

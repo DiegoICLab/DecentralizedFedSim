@@ -47,15 +47,20 @@ def Median_aggregation(models):
 # #############################################################################
 # Trimmed-Mean
 # #############################################################################
+# Code modified from the Flower project on GitHub
+# Repository link: https://github.com/adap/flower
 def TrimmedMean_aggregation(models, proportiontocut):
-    """Extracted from Flower framework."""
+    """
+    """
     return [
         _trim_mean(np.asarray(layer), proportiontocut=proportiontocut) for layer in zip(*models)
     ]
 
-
+# Code modified from the Flower project on GitHub
+# Repository link: https://github.com/adap/flower
 def _trim_mean(array, proportiontocut: float):
-    """Extracted from Flower framework."""
+    """
+    """
 
     axis = 0
     nobs = array.shape[axis]
@@ -83,11 +88,12 @@ def MultiKrum_aggregation(local_model, neighbor_models, num_malicious, to_keep):
         selected_models.append(local_model)
     return Mean_aggregation(selected_models), selected_index
 
+# Code modified from the Flower project on GitHub
+# Repository link: https://github.com/adap/flower
 def MultiKrum_filtering(models, num_malicious, to_keep):
-    """Select the relevant models for the MultiKrum algorithm.
+    """
+    Select the relevant models for the MultiKrum algorithm.
     Output: best_results - An array of models (MultiKrum) or a single model (Krum)
-
-    Copyright: Extracted from Flower framework
     """
     # Compute distances between vectors
     distance_matrix = _compute_distances_matrix(models)
@@ -116,15 +122,16 @@ def MultiKrum_filtering(models, num_malicious, to_keep):
         # Return the model parameters that minimize the score (Krum)
         return [np.argmin(scores)]
 
+# Code modified from the Flower project on GitHub
+# Repository link: https://github.com/adap/flower
 def _compute_distances_matrix(models):
-    """Compute distances between vectors.
+    """
+    Compute matrix distances between vectors.
 
     Input: 
     - models: list of models vectors
     Output: 
     - distances: matrix distance_matrix of squared distances between the vectors
-
-    Copyright: Extracted from Flower framework
     """
 
     distance_matrix = np.zeros((len(models), len(models)))
@@ -136,9 +143,10 @@ def _compute_distances_matrix(models):
 
 def compute_euclidean_distance(model_1, model_2):
     """
+    Compute Euclidean distance between two vectors.
     """
     delta = model_1 - model_2
-    norm = np.linalg.norm(delta)  # type: ignore
+    norm = np.linalg.norm(delta)
     euclidean_distance = norm**2
     return euclidean_distance
 
@@ -185,7 +193,6 @@ def Clustering_filtering(models):
     if len(models) == 1:
         return []
     
-    # TODO check
     # Compute cosine similarities between vectors
     similarity_matrix = _compute_cosine_similarity_matrix(models)
 
@@ -242,24 +249,9 @@ def _compute_cosine_similarity_matrix(models):
                 test = np.array([similarity_matrix[i, j]])
                 nan_indices = np.isnan(test)
                 inner_product = np.dot(models[i], models[j])
-                # TODO Check why this failed
-                if nan_indices[0] == True:
-                    aux = inner_product/100000000
-                    if aux >= 0:
-                        similarity_matrix[i, j] = 0
-                    else:
-                        similarity_matrix[i, j] = 2
                 similarity_matrix[j, i] = similarity_matrix[i, j]
 
     return similarity_matrix
-    
-    # norms = np.linalg.norm(flat_models, axis=1)
-    # inner_product = np.dot(flat_models, flat_models.T)
-    # cosine_similarity = inner_product / np.outer(norms, norms)
-    # cosine_distance = 1 - cosine_similarity
-    # np.fill_diagonal(cosine_distance, 0)
-    
-    # return cosine_distance
 
 def compute_cosine_similarity(model_1, model_2):
     """
@@ -302,7 +294,7 @@ def WFAgg_D_filtering(models, num_malicious):
         distances_vector[i] = compute_euclidean_distance(models[i], median)
 
     num_closest = max(1, len(models) - num_malicious - 1)       # Num.neighbors () - M - 1 = Num.total - M - 2
-    best_indices = np.argsort(distances_vector)[0 : num_closest].tolist()  # noqa: E203
+    best_indices = np.argsort(distances_vector)[0 : num_closest].tolist()
     return best_indices
 
 def WFAgg_C_aggregation(local_model, neighbor_models, num_malicious):
@@ -330,28 +322,15 @@ def WFAgg_C_filtering(models, num_malicious):
 
     median = Median_aggregation(models)
     norm_median = np.linalg.norm(median)
-    # norms = np.array( [np.linalg.norm(models[i]) for i in range(len(models))] )
     scaled_models = [ models[i] * np.min([1, norm_median / np.linalg.norm(models[i])], axis = 0) for i in range(len(models))]
 
     distances_vector = np.zeros((len(models)))
 
     for i, _ in enumerate(scaled_models):
-        cosine_similarity = compute_cosine_similarity(scaled_models[i], median)
-
-        # TODO Check why this failed
-        test = np.array([cosine_similarity])
-        nan_indices = np.isnan(test)
-        if nan_indices[0] == True:
-            aux = np.dot(scaled_models[i], median)/100000000
-            if aux >= 0:
-                distances_vector[i] = 0
-            else:
-                distances_vector[i] = 2
-        else:
-            distances_vector[i] = cosine_similarity
+        distances_vector[i] = compute_cosine_similarity(scaled_models[i], median)
 
     num_closest = max(1, len(models) - num_malicious - 1)       # Num.neighbors () - M - 1 = Num.total - M - 2
-    best_indices = np.argsort(distances_vector)[0 : num_closest].tolist()  # noqa: E203
+    best_indices = np.argsort(distances_vector)[0 : num_closest].tolist()
     return best_indices
 
 def WFAgg_T_aggregation(local_model, neighbor_models, distance_metrics, cosine_metrics, include_first_models):
@@ -380,7 +359,7 @@ def WFAgg_T_filtering(distance_metrics, cosine_metrics, include_first_models):
         cosines = cosine_metrics[i]
 
         if (len(distances) <= 2 or len(cosines) <= 2) and include_first_models == True:
-            # No hay información suficiente para hacer el filtrado
+            # Not enough information for filtering process
             best_indices.append(i)
             continue
         elif (len(distances) <= 2 or len(cosines) <= 2) and include_first_models == False:
@@ -392,7 +371,7 @@ def WFAgg_T_filtering(distance_metrics, cosine_metrics, include_first_models):
         previous_distance = pd.Series(distances[-3:-1][::-1])
         previous_cosine = pd.Series(cosines[-3:-1][::-1])
 
-        # Calcula la media móvil exponencial con un factor de suavizado `alpha`
+        # Compute exponential moving average with smoothing factor
         alpha = 0.01
 
         distance_mean = np.mean(list(previous_distance.ewm(alpha=alpha).mean()), axis = 0)

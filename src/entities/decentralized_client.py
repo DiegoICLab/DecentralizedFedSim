@@ -21,7 +21,7 @@ from utils.utils_logs import *
 from utils.utils_measures import *
 
 class DecentralizeClient(DistributedNode):
-    def __init__(self, node_id, ip, port, neighbors, dataset, trainset, testset, rounds, aggregation_alg,  
+    def __init__(self, node_id, ip, port, neighbors, dataset, trainloader, testloader, rounds, aggregation_alg,  
                  aggregation_config, barrier_sim ):
         super().__init__(
             node_id=node_id,
@@ -29,8 +29,8 @@ class DecentralizeClient(DistributedNode):
             port=port,
             neighbors=neighbors,
             dataset=dataset,
-            trainset=trainset,
-            testset=testset,
+            trainloader=trainloader,
+            testloader=testloader,
             rounds=rounds
         )
         self.barrier_sim = barrier_sim
@@ -62,8 +62,6 @@ class DecentralizeClient(DistributedNode):
                 self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
 
             # Simulate sharing time interval
-            # time.sleep(5)
-            # compute 
             # With this simulated time sharing, model sharing must be reciprocal
             while True:
                 time.sleep(5)
@@ -88,8 +86,6 @@ class DecentralizeClient(DistributedNode):
                 log_info(f"Model: {model}")
 
         log_info_node(self.node_id, f"Training complete!")
-        # num_bytes = get_length_bytes(self.get_parameters())
-        # log_info_node(self.node_id, f"Stored statistics information: {num_bytes} bytes")
 
     # Function to average the local model with received models
     def aggregation_models(self, received_updates, round):
@@ -110,18 +106,18 @@ class DecentralizeClient(DistributedNode):
 
         elif self.aggregation_alg == "Trimmed-Mean":
             received_models.append(self.get_parameters())
-            aggregated_model = TrimmedMean_aggregation(received_models, float(self.aggregation_config["proportiontocut"]))
+            aggregated_model = TrimmedMean_aggregation(received_models, self.aggregation_config["proportiontocut"])
         
         # Distance-based SOTA algorithms
         elif self.aggregation_alg == "Krum":
-            num_malicious = int(self.aggregation_config["num_malicious"])
+            num_malicious = self.aggregation_config["num_malicious"]
             aggregated_model, best_indices = MultiKrum_aggregation(self.get_parameters(), received_models, num_malicious, 0)
             selected_ids = [ neighbor_ids[i] for i in best_indices ]
             log_info_node(self.node_id, f"Selected neighbor models for Krum: {selected_ids}.")
         
         elif self.aggregation_alg == "Multi-Krum":
-            num_malicious = int(self.aggregation_config["num_malicious"])
-            to_keep = int(self.aggregation_config["to_keep"])
+            num_malicious = self.aggregation_config["num_malicious"]
+            to_keep = self.aggregation_config["to_keep"]
             aggregated_model, best_indices = MultiKrum_aggregation(self.get_parameters(), received_models, num_malicious, to_keep)
             selected_ids = [ neighbor_ids[i] for i in best_indices ]
             log_info_node(self.node_id, f"Selected neighbor models for Multi-Krum: {selected_ids}.")
@@ -133,19 +129,19 @@ class DecentralizeClient(DistributedNode):
 
         # Proposed algorithms
         elif self.aggregation_alg == "WFAgg-D":
-            num_malicious = int(self.aggregation_config["num_malicious"])
+            num_malicious = self.aggregation_config["num_malicious"]
             aggregated_model, best_indices = WFAgg_D_aggregation(self.get_parameters(), received_models, num_malicious)
             selected_ids = [ neighbor_ids[i] for i in best_indices ]
             log_info_node(self.node_id, f"Selected neighbor models for WFAgg-D: {selected_ids}.")
 
         elif self.aggregation_alg == "WFAgg-C":
-            num_malicious = int(self.aggregation_config["num_malicious"])
+            num_malicious = self.aggregation_config["num_malicious"]
             aggregated_model, best_indices = WFAgg_C_aggregation(self.get_parameters(), received_models, num_malicious)
             selected_ids = [ neighbor_ids[i] for i in best_indices ]
             log_info_node(self.node_id, f"Selected neighbor models for WFAgg-C: {selected_ids}.")
         
         elif self.aggregation_alg == "WFAgg-T":
-            transitory_rounds = int(self.aggregation_config["transitory_rounds"])
+            transitory_rounds = self.aggregation_config["transitory_rounds"]
             previous_models = [ self.previous_neighbor_models[id] if id in list(self.previous_neighbor_models.keys()) else None  
                                 for id in neighbor_ids ]
             self.update_temporal_statistics(neighbor_ids, received_models, previous_models, round, transitory_rounds)
@@ -161,13 +157,13 @@ class DecentralizeClient(DistributedNode):
             log_info_node(self.node_id, f"Selected neighbor models for WFAgg-T: {selected_ids}.")
         
         elif self.aggregation_alg == "WFAgg-E":
-            smooth_factor = float(self.aggregation_config["smooth_factor"])
+            smooth_factor = self.aggregation_config["smooth_factor"]
             aggregated_model = WFAgg_E_aggregation(self.get_parameters(), received_models, smooth_factor, np.ones(len(received_models)))
 
         elif self.aggregation_alg == "Alt-WFAgg":
-            transitory_rounds = int(self.aggregation_config["transitory_rounds"])
-            num_malicious = int(self.aggregation_config["num_malicious"])
-            smooth_factor = float(self.aggregation_config["smooth_factor"])
+            transitory_rounds = self.aggregation_config["transitory_rounds"]
+            num_malicious = self.aggregation_config["num_malicious"]
+            smooth_factor = self.aggregation_config["smooth_factor"]
 
             previous_models = [ self.previous_neighbor_models[id] if id in list(self.previous_neighbor_models.keys()) else None  
                                 for id in neighbor_ids ]
@@ -193,7 +189,7 @@ class DecentralizeClient(DistributedNode):
             log_info_node(self.node_id, f"Neighbor models {neighbor_ids} for aggregation have weights: {weights}.")
 
         else:
-            log_error(f"Este algoritmo de agregacion robusta no está implementado. Se mantiene el mismo modelo de la anterior ronda.")
+            log_error(f"Not implemented Byzantine-robust aggregation algorithm. Last local model is kept for this round.")
             aggregated_model = None
 
         return aggregated_model

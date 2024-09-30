@@ -5,13 +5,12 @@ from utils.utils_logs import *
 from machine_learning.dataset.MNIST import load_MNIST
 from machine_learning.dataset.CIFAR10 import load_CIFAR10
 from machine_learning.dataset.utils import prepare_dataset
-from simulator.simulation import centralized_simulation
+from simulator.simulation import decentralized_simulation
 
 def main(args, nodes_config):
 
     sim_config = {
         "rounds": args.rounds,
-        "server_id": args.server,
         "algorithm": args.algorithm,
         "dataset": args.dataset,
         "malicious_nodes": args.malicious,
@@ -20,29 +19,28 @@ def main(args, nodes_config):
         "attack_config": {},
     }
 
-    # TODO Move check type here
     if sim_config["byz_attack"] == "IPM":
-        sim_config["attack_config"]["epsilon"] = args.paramsAtk[0]
+        sim_config["attack_config"]["epsilon"] = float(args.paramsAtk[0])
     elif sim_config["byz_attack"] == "ALIE":
-        sim_config["attack_config"]["zmax"] = args.paramsAtk[0]
+        sim_config["attack_config"]["zmax"] = float(args.paramsAtk[0])
 
     if sim_config["algorithm"] == "Trimmed-Mean":
-        sim_config["algorithm_config"]["proportiontocut"] = args.paramsAgg[0]
+        sim_config["algorithm_config"]["proportiontocut"] = float(args.paramsAgg[0])
     elif sim_config["algorithm"] == "Krum":
-        sim_config["algorithm_config"]["num_malicious"] = args.paramsAgg[0]
+        sim_config["algorithm_config"]["num_malicious"] = int(args.paramsAgg[0])
     elif sim_config["algorithm"] == "Multi-Krum":
-        sim_config["algorithm_config"]["num_malicious"] = args.paramsAgg[0]
-        sim_config["algorithm_config"]["to_keep"] = args.paramsAgg[1]
+        sim_config["algorithm_config"]["num_malicious"] = int(args.paramsAgg[0])
+        sim_config["algorithm_config"]["to_keep"] = int(args.paramsAgg[1])
     elif sim_config["algorithm"] == "WFAgg-D" or sim_config["algorithm"] == "WFAgg-C":
-        sim_config["algorithm_config"]["num_malicious"] = args.paramsAgg[0]
+        sim_config["algorithm_config"]["num_malicious"] = int(args.paramsAgg[0])
     elif sim_config["algorithm"] == "WFAgg-T":
-        sim_config["algorithm_config"]["transitory_rounds"] = args.paramsAgg[0]
+        sim_config["algorithm_config"]["transitory_rounds"] = int(args.paramsAgg[0])
     elif sim_config["algorithm"] == "WFAgg-E":
-        sim_config["algorithm_config"]["smooth_factor"] = args.paramsAgg[0]
+        sim_config["algorithm_config"]["smooth_factor"] = float(args.paramsAgg[0])
     elif sim_config["algorithm"] == "WFAgg" or sim_config["algorithm"] == "Alt-WFAgg":
-        sim_config["algorithm_config"]["num_malicious"] = args.paramsAgg[0]
-        sim_config["algorithm_config"]["transitory_rounds"] = args.paramsAgg[1]
-        sim_config["algorithm_config"]["smooth_factor"] = args.paramsAgg[2]
+        sim_config["algorithm_config"]["num_malicious"] = int(args.paramsAgg[0])
+        sim_config["algorithm_config"]["transitory_rounds"] = int(args.paramsAgg[1])
+        sim_config["algorithm_config"]["smooth_factor"] = float(args.paramsAgg[2])
 
     if sim_config["dataset"] == "MNIST":
         trainset, testset = load_MNIST()
@@ -50,12 +48,15 @@ def main(args, nodes_config):
         trainset, testset = load_CIFAR10()
 
     trainloaders, valloaders, testloader = prepare_dataset(
-        trainset, testset, num_partitions=(len(nodes_config)-1), batch_size_client=32, batch_size_test=128, val_ratio=0.1
+        trainset, testset, num_partitions=len(nodes_config), batch_size_client=32, batch_size_test=128, val_ratio=0.1
     )
     
-    simulation_results = centralized_simulation(sim_config=sim_config, nodes_config=nodes_config, trainloaders=trainloaders, valloaders=valloaders, testloader=testloader)
+    simulation_results = decentralized_simulation(sim_config=sim_config, nodes_config=nodes_config, trainloaders=trainloaders, valloaders=valloaders)
     log_success(simulation_results)
-    # file_name = config.output
+    
+    file_name = args.output
+    with open( f"./output/decentralized_sim/{file_name}.json",  "w" ) as f:
+        json.dump(simulation_results, f, indent=2)
 
     return
 
@@ -63,7 +64,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Program for the simulation of decentralized federated learning environments")
     parser.add_argument("-r", "--rounds", type=int, help="Number of rounds of communication", required=True)
-    parser.add_argument("-s", "--server", type=str, help="ID of the server in the network topology", required=True)
     parser.add_argument("-t", "--topology", type=str, help="Path to the file containing the network topology", required=True)
     parser.add_argument("-m", "--malicious", type=int, nargs='+', help="Byzantine Node Array", required=False, default=[])
     parser.add_argument("-at", "--attack", type=str, help="Type of byzantine attack", required=False,
@@ -82,16 +82,16 @@ if __name__ == "__main__":
         with open(args.topology, 'r') as file:
             nodes_config = json.load(file)
     except FileNotFoundError:
-        log_error(f"No se ha encontrado el archivo con la topologia de la red")
+        log_error(f"Not found topology network configuration file")
         exit(1)
 
     if (len(args.malicious) == 0 and args.attack is not None) or (len(args.malicious) != 0 and args.attack is None):
-        log_error(f"Revisar la configuración de los ataques y nodos maliciosos")
+        log_error(f"Check configuration about attacks and malicious nodes")
         exit(1)
 
-    # for i in args.malicious:
-    #     if i not in topology.keys():
-    #         log_error(f"Algunos de los nodos maliciosos no se encuentran en la topologia")
-    #         exit(1)
+    for i in args.malicious:
+        if str(i) not in nodes_config.keys():
+            log_error(f"Some malicious nodes are not found in the network topology")
+            exit(1)
     
     main(args, nodes_config)

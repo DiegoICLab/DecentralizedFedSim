@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='DecentralizedFedSim',
-    version='2.0.0',
+    version='2.0.1',
     author='dcajaraville',
     author_email='dcajaraville@det.uvigo.es',
     long_description='This project aims to simulate environments for **Decentralized Federated Learning** (DFL), a distributed learning technique where multiple nodes collaborate among them (without a central server) to train a Machine Learning model without sharing their local data. The simulation allows exploration of various network topologies, model aggregation strategies, and robustness against malicious nodes.',

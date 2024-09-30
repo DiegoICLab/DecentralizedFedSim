@@ -12,7 +12,7 @@ from machine_learning.attacks.utils import(
 )
 
 class MaliciousDecentralizeClient(DecentralizeClient):
-    def __init__(self, node_id, ip, port, neighbors, dataset, trainset, testset, rounds, aggregation_alg,  
+    def __init__(self, node_id, ip, port, neighbors, dataset, trainloader, testloader, rounds, aggregation_alg,  
                  aggregation_config, barrier_sim, byz_attack, attack_config ):
         super().__init__(
             node_id=node_id,
@@ -20,8 +20,8 @@ class MaliciousDecentralizeClient(DecentralizeClient):
             port=port,
             neighbors=neighbors,
             dataset=dataset,
-            trainset=trainset,
-            testset=testset,
+            trainloader=trainloader,
+            testloader=testloader,
             rounds=rounds,
             aggregation_alg=aggregation_alg,
             aggregation_config=aggregation_config,
@@ -33,7 +33,7 @@ class MaliciousDecentralizeClient(DecentralizeClient):
         if self.byz_attack == "Label-Flipping":
             # TODO Check 
             log_info_node(self.node_id, f"Computing {self.byz_attack} attack. Modifying 100% of the training labels.")
-            self.trainset = client_label_flipping_attack(self.trainset, percentage_flip=1)
+            self.trainloader = client_label_flipping_attack(self.trainloader, percentage_flip=1)
 
     # Main function to start the decentralized training process
     def run(self):
@@ -49,9 +49,9 @@ class MaliciousDecentralizeClient(DecentralizeClient):
             self.barrier_sim.wait()  # Synchronize with other nodes
 
             # Simulate sharing time interval
-            # TODO With this simulated time sharing, model attack will be computed by using only the received models
-            time.sleep(5)
+            # With this simulated time sharing, model attack will be computed by using only the received models
             if self.byz_attack != "Label-Flipping":
+                time.sleep(5)
                 log_info_node(self.node_id, f"Computing Byzantine attack ({self.byz_attack})")
             received_updates = self.get_all_updates_from_queue()
             self.perform_model_poisoning(received_updates)
@@ -93,11 +93,11 @@ class MaliciousDecentralizeClient(DecentralizeClient):
             self.set_parameters(noisy_model)
         
         elif self.byz_attack == "IPM":
-            epsilon = float(self.attack_config["epsilon"])
+            epsilon = self.attack_config["epsilon"]
             computed_model = client_IPM_attack(received_models, epsilon)
             self.set_parameters(computed_model)
 
         elif self.byz_attack == "ALIE":
-            zmax = float(self.attack_config["zmax"])
+            zmax = self.attack_config["zmax"]
             computed_model = client_ALIE_attack(received_models, zmax)
             self.set_parameters(computed_model)

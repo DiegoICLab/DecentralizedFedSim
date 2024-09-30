@@ -33,19 +33,11 @@ def client_label_flipping_attack(
 
     # Flip labels for selected samples
     for index in flip_indices:
-        img, label = att_dataloader.dataset.dataset.dataset[index]
-        # Flip the label (assuming MNIST labels are integers)
-        # new_label = (label + random.randint(1, 9)) % 10  # Change label to a different random digit
+        _, label = att_dataloader.dataset.dataset.dataset[index]
         new_label = (num_labels - label - 1) % num_labels 
         att_dataloader.dataset.dataset.dataset.targets[index] = new_label
 
     return att_dataloader
-
-    ## TESTLOADER
-    # labels = [testloader.dataset[i][1] for i in range(len(testloader.dataset))]
-
-    # for i in range(len(testset)):
-    #     testset.targets[i]=0
 
 def client_sign_flipping_attack(model):
     """

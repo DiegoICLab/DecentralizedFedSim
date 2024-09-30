@@ -1,35 +1,19 @@
 import time
-import numpy as np
 
 from entities.distributed_node import DistributedNode
-from machine_learning.aggregation.byzantine_robust_algorithms import (
-    Mean_aggregation, 
-    Median_aggregation, 
-    MultiKrum_aggregation,
-    TrimmedMean_aggregation,
-    Clustering_aggregation,
-    WFAgg_D_aggregation,
-    WFAgg_C_aggregation,
-    WFAgg_T_aggregation,
-    WFAgg_E_aggregation,
-    Alt_WFAgg_aggregation,
-    WFAgg_aggregation,
-    compute_euclidean_distance,
-    compute_cosine_similarity
-)
 from utils.utils_logs import *
 from utils.utils_measures import *
 
 class CentralizeClient(DistributedNode):
-    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, trainset, testset, rounds, barrier_sim ):
+    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, trainloader, testloader, rounds, barrier_sim ):
         super().__init__(
             node_id=node_id,
             ip=ip,
             port=port,
             neighbors=neighbors,
             dataset=dataset,
-            trainset=trainset,
-            testset=testset,
+            trainloader=trainloader,
+            testloader=testloader,
             rounds=rounds
         )
         self.server_id=server_id
@@ -73,5 +57,3 @@ class CentralizeClient(DistributedNode):
             self.save_statistics()
 
         log_info_node(self.node_id, f"Training complete!")
-        # num_bytes = get_length_bytes(self.get_parameters())
-        # log_info_node(self.node_id, f"Stored statistics information: {num_bytes} bytes")

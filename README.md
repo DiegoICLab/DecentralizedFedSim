@@ -9,7 +9,7 @@ This project aims to simulate environments for **Decentralized Federated Learnin
     -  **../entities**: Provides the main classes that define the role of the device in the learning network (server, client...)
     -  **../machine_learning**: Various tools for handling ML models, Byzantine attacks, aggregation algorithms...
     -  **../utils**: Multipurpose tools: logger...
-    -  **../main_(de)centralized.py**: Provides a specific example of how to launch a (D)FL simulation.
+    -  **../main_sim_(de)centralized.py**: Provides a specific example of how to launch a (D)FL simulation.
 
 ## Requirements
 
@@ -51,9 +51,9 @@ pip3 install -r requirements.txt
 To run the simulation, use the following command (it is one example):
 
 ```bash
-python3 ./src/main_decentralized.py -r 10 -t './config/basic_decentralized_topology.json' -m 4 -at "IPM" -p1 0.5 -a "Trimmed-Mean" -p2 0.5 -db "MNIST" -o "decentralized_trimmed_mean_0.1_alie"
+python3 ./src/main_sim_decentralized.py -r 10 -t './config/basic_decentralized_topology.json' -m 4 -at "IPM" -p1 0.5 -a "Trimmed-Mean" -p2 0.5 -db "MNIST" -o "decentralized_trimmed_mean_0.1_alie"
 
-python3 ./src/main_centralized.py -r 10 -s 1 -t './config/basic_centralized_topology.json' -m 4 -at "IPM" -p1 0.5 -a "Trimmed-Mean" -p2 0.5 -db "MNIST" -o "centralized_trimmed_mean_0.1_alie"
+python3 ./src/main_sim_centralized.py -r 10 -s 1 -t './config/basic_centralized_topology.json' -m 4 -at "IPM" -p1 0.5 -a "Trimmed-Mean" -p2 0.5 -db "MNIST" -o "centralized_trimmed_mean_0.1_alie"
 ```
 
 Configuration parameters (more details in the source code):

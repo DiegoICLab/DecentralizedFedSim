@@ -12,7 +12,7 @@ from machine_learning.dataset.CIFAR10 import CIFAR10_Net, train_CIFAR10, test_CI
 from utils.utils_logs import *
 
 class DistributedNode:
-    def __init__(self, node_id, ip, port, neighbors, dataset, trainset, testset, rounds):
+    def __init__(self, node_id, ip, port, neighbors, dataset, trainloader, testloader, rounds):
         self.node_id = node_id
         self.ip = ip
         self.port = port
@@ -23,8 +23,8 @@ class DistributedNode:
             self.model = MNIST_Net(num_classes=10)
         elif self.dataset == "CIFAR-10":
             self.model = CIFAR10_Net(num_classes=10)
-        self.trainset = trainset
-        self.testset = testset
+        self.trainloader = trainloader
+        self.testloader = testloader
         self.rounds = rounds
         
         self.model_queue = Queue()  # Queue to store received models
@@ -47,7 +47,7 @@ class DistributedNode:
         parameters = []
         init = 0
         for _, tensor_parameter in self.model.state_dict().items():
-            end = init + tensor_parameter.numel()  # número de elementos en el tensor
+            end = init + tensor_parameter.numel()  # number of elements in tensor
             recovered_tensor = torch.tensor(updated_model[init:end], dtype=tensor_parameter.dtype)
             recovered_tensor = recovered_tensor.view(tensor_parameter.shape)
             parameters.append(recovered_tensor)
@@ -61,17 +61,17 @@ class DistributedNode:
     # Function to train the local model for one round
     def train_local_model(self, epochs=1):
         if self.dataset == "MNIST":
-            train_MNIST(self.model, self.trainset, epochs, None)
+            train_MNIST(self.model, self.trainloader, epochs, None)
         elif self.dataset == "CIFAR-10":
-            train_CIFAR10(self.model, self.trainset, epochs, None)
+            train_CIFAR10(self.model, self.trainloader, epochs, None)
         return 
     
     # Function to evaluate the local model
     def evaluate_local_model(self):
         if self.dataset == "MNIST":
-            return test_MNIST(self.model, self.testset, None)
+            return test_MNIST(self.model, self.testloader, None)
         elif self.dataset == "CIFAR-10":
-            return test_CIFAR10(self.model, self.testset, None)
+            return test_CIFAR10(self.model, self.testloader, None)
 
     ##################################
     # Communication functionalities
@@ -119,7 +119,7 @@ class DistributedNode:
                     break
             model_update = pickle.loads(data)
             model_update['local_model'] = pickle.loads(model_update['local_model'])
-            self.model_queue.put(model_update)  # Safely add the model to the queue
+            self.model_queue.put(model_update) 
             conn.close()
 
     # Start a thread for receiving models
@@ -132,7 +132,7 @@ class DistributedNode:
     def get_all_updates_from_queue(self):
         received_updates = []
         while not self.model_queue.empty():
-            received_updates.append(self.model_queue.get())  # Get all available models
+            received_updates.append(self.model_queue.get())
         return received_updates
     
     # Function to get the number of updates in the queue

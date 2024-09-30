@@ -11,11 +11,14 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+# Code modified from the Flower project on GitHub
+# Repository link: https://github.com/adap/flower
 # #############################################################################
 # Regular PyTorch pipeline: nn.Module, train, test, and DataLoader (MNIST)
 # #############################################################################
-
 class MNIST_Net(nn.Module):
+    """Model (simple CNN adapted from 'PyTorch: 
+    A 60 Minute Blitz')"""
     def __init__(self, num_classes: int) -> None:       # 44,426 parameters with 10 classes
         super(MNIST_Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 6, 5)
@@ -40,7 +43,7 @@ def train_MNIST(net, trainloader, epochs, DEVICE):
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
     net.train()
-    # TODO inputs, targets = self.trainset
+
     for _ in range(epochs):
         for images, labels in tqdm(trainloader):
             optimizer.zero_grad()
@@ -65,15 +68,17 @@ def test_MNIST(net, testloader, DEVICE):
                 outputs = net(images)
             loss += loss_fn(outputs, labels).item()
             _, predicted = torch.max(outputs.data, 1)
-            correct += (predicted == labels).sum().item()                       # Predicciones correctas en el lote. torch.max(·)[1] para obtener las clases predichas por el modelo.m()
+            correct += (predicted == labels).sum().item()
     accuracy = correct / len(testloader.dataset)
     average_loss = loss / len(testloader.dataset)
     return accuracy, average_loss
 
 def load_MNIST(data_path: str = "./data"):
-    """This function downloads the MNIST dataset into the `data_path`
+    """
+    This function downloads the MNIST dataset into the `data_path`
     directory if it is not there already. WE construct the train/test
-    split by converting the images into tensors and normalising them"""
+    split by converting the images into tensors and normalising them
+    """
 
     # transformation to convert images to tensors and apply normalisation
     tr = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
@@ -88,7 +93,6 @@ def load_MNIST(data_path: str = "./data"):
 # #############################################################################
 # Data analysis and centralized execution
 # #############################################################################
-
 def visualise_n_random_examples(trainset_, n: int, verbose: bool = True):
     # take n examples at random
     idx = list(range(len(trainset_.data)))
@@ -135,7 +139,6 @@ def data_analysis():
 
 # ################################################################################
 # Given the loaders.dataset, it is represented the distribution of labels (MNIST)
-# REVISAR PORQUE ES MUY PARECIDO AL DE ARRIBA
 # ################################################################################
 def plot_labels_distribution(train_partition):
     # count data points

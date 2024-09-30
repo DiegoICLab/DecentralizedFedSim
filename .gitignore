@@ -1,11 +1,14 @@
-# Ignorar todo el contenido de la carpeta data
+# Ignore downloaded data by PyTorch
 data/*
 
-# Ignorar todo el contenido de la carpeta logs
+# Ignore output files from the simulators
 logs/*
-
-# Ignorar archivos JSON específicos en subcarpetas de output
 output/*
+
+# Ignore unused script
+src/*.sh
+graphics/*
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -34,6 +37,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Distribution / packaging
+.DS_Store
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

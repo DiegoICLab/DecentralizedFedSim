@@ -12,7 +12,7 @@ from machine_learning.attacks.utils import(
 )
 
 class MaliciousCentralizeClient(CentralizeClient):
-    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, trainset, testset, rounds, barrier_sim, byz_attack, attack_config ):
+    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, trainloader, testloader, rounds, barrier_sim, byz_attack, attack_config ):
         super().__init__(
             node_id=node_id,
             ip=ip,
@@ -20,8 +20,8 @@ class MaliciousCentralizeClient(CentralizeClient):
             neighbors=neighbors,
             server_id=server_id,
             dataset=dataset,
-            trainset=trainset,
-            testset=testset,
+            trainloader=trainloader,
+            testloader=testloader,
             rounds=rounds,
             barrier_sim=barrier_sim
         )
@@ -31,7 +31,7 @@ class MaliciousCentralizeClient(CentralizeClient):
         if self.byz_attack == "Label-Flipping":
             # TODO Check 
             log_info_node(self.node_id, f"Computing {self.byz_attack} attack. Modifying 100% of the training labels.")
-            self.trainset = client_label_flipping_attack(self.trainset, percentage_flip=1)
+            self.trainloader = client_label_flipping_attack(self.trainloader, percentage_flip=1)
             
     # Main function to start the  centralized training process
     def run(self):
@@ -47,8 +47,8 @@ class MaliciousCentralizeClient(CentralizeClient):
             self.barrier_sim.wait()  # Simulated synchronize with other nodes
 
             # Compute malicious attack
-            time.sleep(5)
             if self.byz_attack != "Label-Flipping":
+                time.sleep(5)
                 log_info_node(self.node_id, f"Computing Byzantine attack ({self.byz_attack})")
             received_updates = self.get_all_updates_from_queue()
             self.perform_model_poisoning(received_updates)
@@ -78,8 +78,6 @@ class MaliciousCentralizeClient(CentralizeClient):
             self.save_statistics()
 
         log_info_node(self.node_id, f"Training complete!")
-        # num_bytes = get_length_bytes(self.get_parameters())
-        # log_info_node(self.node_id, f"Stored statistics information: {num_bytes} bytes")
     
     ############################################################## 
     # Performing model attacks
@@ -96,11 +94,11 @@ class MaliciousCentralizeClient(CentralizeClient):
             self.set_parameters(noisy_model)
         
         elif self.byz_attack == "IPM":
-            epsilon = float(self.attack_config["epsilon"])
+            epsilon = self.attack_config["epsilon"]
             computed_model = client_IPM_attack(received_models, epsilon)
             self.set_parameters(computed_model)
 
         elif self.byz_attack == "ALIE":
-            zmax = float(self.attack_config["zmax"])
+            zmax = self.attack_config["zmax"]
             computed_model = client_ALIE_attack(received_models, zmax)
             self.set_parameters(computed_model)

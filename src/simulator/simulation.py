@@ -8,7 +8,7 @@ from entities.parameter_server import ParameterServer
 from utils.utils_logs import *
 from machine_learning.metrics.utils import R_squared_models
 
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 def decentralized_simulation(
     sim_config: Dict[str, Any], 
@@ -42,8 +42,8 @@ def decentralized_simulation(
                 port=value['port'], 
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 dataset=sim_config["dataset"],
-                trainset=trainloaders[index],
-                testset=valloaders[index],
+                trainloader=trainloaders[index],
+                testloader=valloaders[index],
                 rounds=sim_config["rounds"],
                 aggregation_alg=sim_config["algorithm"],
                 aggregation_config=sim_config.get("algorithm_config", None),
@@ -59,8 +59,8 @@ def decentralized_simulation(
                 port=value['port'], 
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 dataset=sim_config["dataset"],
-                trainset=trainloaders[index],
-                testset=valloaders[index],
+                trainloader=trainloaders[index],
+                testloader=valloaders[index],
                 rounds=sim_config["rounds"],
                 aggregation_alg=sim_config["algorithm"],
                 aggregation_config=sim_config.get("algorithm_config", None),
@@ -125,7 +125,7 @@ def centralized_simulation(
         port=server_conf['port'], 
         neighbors= [nodes_config[str(i)] for i in server_conf['neighbors']], 
         dataset=sim_config["dataset"],
-        testset=testloader,
+        testloader=testloader,
         rounds=sim_config["rounds"],
         aggregation_alg=sim_config["algorithm"],
         aggregation_config=sim_config.get("algorithm_config", None)
@@ -137,7 +137,7 @@ def centralized_simulation(
 
     for index, (key, value) in enumerate(clients_config.items()):
         if value['id'] in sim_config["malicious_nodes"]:
-            # Create instances of MaliciousCentralizeNode
+            # Create instances of MaliciousCentralizedNode
             nodes[key] = MaliciousCentralizeClient(
                 node_id=value['id'], 
                 ip=value['ip'], 
@@ -145,15 +145,15 @@ def centralized_simulation(
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 server_id=sim_config["server_id"],
                 dataset=sim_config["dataset"],
-                trainset=trainloaders[index],
-                testset=valloaders[index],
+                trainloader=trainloaders[index],
+                testloader=valloaders[index],
                 rounds=sim_config["rounds"],
                 barrier_sim=barrier_sim,
                 byz_attack=sim_config["byz_attack"],
                 attack_config=sim_config.get("attack_config", None)
             )
         else:
-            # Create instances of CentralizeNode
+            # Create instances of CentralizedNode
             nodes[key] = CentralizeClient(
                 node_id=value['id'], 
                 ip=value['ip'], 
@@ -161,8 +161,8 @@ def centralized_simulation(
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']],
                 server_id=sim_config["server_id"], 
                 dataset=sim_config["dataset"],
-                trainset=trainloaders[index],
-                testset=valloaders[index],
+                trainloader=trainloaders[index],
+                testloader=valloaders[index],
                 rounds=sim_config["rounds"],
                 barrier_sim=barrier_sim
             )
