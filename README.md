@@ -19,6 +19,7 @@ This project aims to simulate environments for **Decentralized Federated Learnin
   - torchvision==0.15.2
   - numpy==1.24.1
   - pandas==1.5.3
+  - urllib3==1.26.7
   - scipy==1.11.3
   - tqdm==4.65.0
   - seaborn==0.13.0
@@ -51,9 +52,9 @@ pip3 install -r requirements.txt
 To run the simulation, use the following command (it is one example):
 
 ```bash
-python3 ./src/main_sim_decentralized.py -r 10 -t './config/basic_decentralized_topology.json' -m 4 -at "IPM" -p1 0.5 -a "Trimmed-Mean" -p2 0.5 -db "MNIST" -o "decentralized_trimmed_mean_0.1_alie"
+python3 ./src/main_sim_decentralized.py -r 10 -t './config/basic_decentralized_topology.json' -m 4 -at "IPM" -p1 0.5 -a "Trimmed-Mean" -p2 0.1 -db "MNIST" -o "./output/decentralized_sim/decentralized_trimmed_mean_0.1_alie.json"
 
-python3 ./src/main_sim_centralized.py -r 10 -s 1 -t './config/basic_centralized_topology.json' -m 4 -at "IPM" -p1 0.5 -a "Trimmed-Mean" -p2 0.5 -db "MNIST" -o "centralized_trimmed_mean_0.1_alie"
+python3 ./src/main_sim_centralized.py -r 10 -s 0 -t './config/basic_centralized_topology.json' -m 4 -at "IPM" -p1 0.5 -a "Trimmed-Mean" -p2 0.1 -db "MNIST" -o "./output/centralized_sim/centralized_trimmed_mean_0.1_alie.json"
 ```
 
 Configuration parameters (more details in the source code):

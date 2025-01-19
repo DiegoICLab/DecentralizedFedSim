@@ -10,7 +10,7 @@ def log_success(message):
     print(f"{Fore.GREEN}[SUCCESS]{Style.RESET_ALL} {message}")
 
 def log_debug(message):
-    print(f"{Fore.MAGENTA}[SUCCESS]{Style.RESET_ALL} {message}")
+    print(f"{Fore.MAGENTA}[DEBUG]{Style.RESET_ALL} {message}")
 
 def log_warning(message):
     print(f"{Fore.YELLOW}[WARNING]{Style.RESET_ALL} {message}")

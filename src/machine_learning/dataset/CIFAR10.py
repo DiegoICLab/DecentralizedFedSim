@@ -33,13 +33,17 @@ class CIFAR10_Net(nn.Module):
         return self.fc3(x)                                  # No activation function here, common in classification problems where the appropriate loss function (e.g., nn.CrossEntropyLoss) includes softmax internally.
 
 
-def train_CIFAR10(net, trainloader, epochs, DEVICE):
+def train_CIFAR10(net, trainloader, epochs, DEVICE, show_progress):
     """Train the model on the training set."""
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     net.train()
     for _ in range(epochs):
-        for images, labels in tqdm(trainloader):
+        if show_progress is True:
+            trainloader_aux = tqdm(trainloader)
+        else:
+            trainloader_aux = trainloader
+        for images, labels in trainloader_aux:
             optimizer.zero_grad()
             if DEVICE is not None:
                 loss_fn(net(images.to(DEVICE)), labels.to(DEVICE)).backward()

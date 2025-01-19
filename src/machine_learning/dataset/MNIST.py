@@ -38,14 +38,18 @@ class MNIST_Net(nn.Module):
         return x
 
 
-def train_MNIST(net, trainloader, epochs, DEVICE):
+def train_MNIST(net, trainloader, epochs, DEVICE, show_progress):
     """Train the network on the training set."""
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
     net.train()
 
     for _ in range(epochs):
-        for images, labels in tqdm(trainloader):
+        if show_progress is True:
+            trainloader_aux = tqdm(trainloader)
+        else:
+            trainloader_aux = trainloader
+        for images, labels in s:
             optimizer.zero_grad()
             if DEVICE is not None:
                 loss_fn(net(images.to(DEVICE)), labels.to(DEVICE)).backward()         # Calcula la pérdida entre las predicciones del modelo y las etiquetas reales, y luego propaga hacia atrás los gradientes a través de la red neuronal.

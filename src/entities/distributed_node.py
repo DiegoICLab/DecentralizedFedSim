@@ -61,9 +61,9 @@ class DistributedNode:
     # Function to train the local model for one round
     def train_local_model(self, epochs=1):
         if self.dataset == "MNIST":
-            train_MNIST(self.model, self.trainloader, epochs, None)
+            train_MNIST(self.model, self.trainloader, epochs, None, False)
         elif self.dataset == "CIFAR-10":
-            train_CIFAR10(self.model, self.trainloader, epochs, None)
+            train_CIFAR10(self.model, self.trainloader, epochs, None, False)
         return 
     
     # Function to evaluate the local model

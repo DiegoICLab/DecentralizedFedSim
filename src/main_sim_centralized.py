@@ -56,7 +56,7 @@ def main(args, nodes_config):
     log_success(simulation_results)
 
     file_name = args.output
-    with open( f"./output/centralized_sim/{file_name}.json",  "w" ) as f:
+    with open( file_name,  "w" ) as f:
         json.dump(simulation_results, f, indent=2)
 
     return
