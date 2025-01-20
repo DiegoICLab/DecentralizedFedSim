@@ -82,21 +82,24 @@ def decentralized_simulation(
     # Wait for all threads to finish
     for t in threads:
         t.join()
-
+    
     simulation_results = {
-        "accuracy": {},
-        "loss": {},
         "R-Squared": []
     }
+
+    evaluate_metrics = nodes[next(iter(nodes))].statistics.keys()
+    for metric in evaluate_metrics:
+        if metric not in simulation_results:
+            simulation_results[metric] = {}
     
     for key, node in nodes.items():
-        simulation_results["accuracy"][key] = node.statistics["accuracy"]
-        simulation_results["loss"][key] = node.statistics["loss"]
+        for metric in evaluate_metrics:
+            simulation_results[metric][key] = node.statistics[metric]
     
     for round in range(int(sim_config["rounds"])):
         models_round = []
         for _, node in nodes.items():
-            models_round.append(node.statistics["local_model"][round])
+            models_round.append(node.local_model_history[round])
         simulation_results["R-Squared"].append(R_squared_models(models_round))
     
     return simulation_results
@@ -189,9 +192,11 @@ def centralized_simulation(
     for t in threads:
         t.join()
 
-    simulation_results = {
-        "accuracy": nodes[sim_config["server_id"]].statistics["accuracy"],
-        "loss": nodes[sim_config["server_id"]].statistics["loss"]
-    }
-    
+    simulation_results = nodes[sim_config["server_id"]].statistics
     return simulation_results
+    # simulation_results = {
+    #     "accuracy": nodes[sim_config["server_id"]].statistics["accuracy"],
+    #     "loss": nodes[sim_config["server_id"]].statistics["loss"]
+    # }
+    
+    # return simulation_results

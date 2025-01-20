@@ -87,4 +87,7 @@ class MNIST_Net(nn.Module):
                 correct += (predicted == labels).sum().item()
         accuracy = correct / len(testloader.dataset)
         average_loss = loss / len(testloader.dataset)
-        return accuracy, average_loss
+        return {
+            "accuracy": accuracy,
+            "loss": average_loss
+        }

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 from torchvision.transforms import Compose, ToTensor, Normalize
 from torchvision.datasets import CIFAR10
 from collections import OrderedDict
@@ -87,4 +88,7 @@ class CIFAR10_Net(nn.Module):
                 correct += (predicted == labels).sum().item()
         accuracy = correct / len(testloader.dataset)
         average_loss = loss / len(testloader.dataset)
-        return accuracy, average_loss
+        return {
+            "accuracy": accuracy,
+            "loss": average_loss
+        }

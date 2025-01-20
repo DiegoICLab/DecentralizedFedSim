@@ -81,10 +81,13 @@ class DecentralizeClient(DistributedNode):
             # Save the model stats (optional)
             self.save_statistics()
             if self.node_id == 1:
-                acc = self.statistics["accuracy"][-1]
-                model = self.statistics["local_model"][-1]
-                log_info(f"Accuracy: {acc}")
-                log_info(f"Model: {model}")
+                log_info("Showing results of this round of node 1 as an example:")
+                for key, value in self.statistics.items():
+                    acc = self.statistics[key][-1]
+                    log_info(f"{key}: {acc}")
+                    
+                model = self.local_model_history[-1]
+                log_info(f"local model: {model}")
 
         log_info_node(self.node_id, f"Training complete!")
 

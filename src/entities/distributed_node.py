@@ -24,11 +24,8 @@ class DistributedNode:
         self.model_queue = Queue()  # Queue to store received models
         self.listener_thread = None
 
-        self.statistics = {
-            "accuracy": [],
-            "loss": [],
-            "local_model": []
-        }
+        self.statistics = {}
+        self.local_model_history = []
 
     ##################################
     # Model functionalities
@@ -120,8 +117,14 @@ class DistributedNode:
     ##################################
 
     def save_statistics(self):
-        accuracy, loss = self.evaluate_local_model()
-        self.statistics["accuracy"].append(accuracy)
-        self.statistics["loss"].append(loss)
-        self.statistics["local_model"].append(self.get_parameters())
+        results = self.evaluate_local_model()
+        
+        for metric in results.keys():
+            if metric not in self.statistics:
+                self.statistics[metric] = []
+                
+        for key, value in results.items():
+            self.statistics[key].append(value)
+            
+        self.local_model_history.append(self.get_parameters())
         return
