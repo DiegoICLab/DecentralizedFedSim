@@ -6,23 +6,17 @@ import numpy as np
 from datetime import datetime
 from queue import Queue
 
-from collections import OrderedDict
-from machine_learning.dataset.MNIST import MNIST_Net, train_MNIST, test_MNIST
-from machine_learning.dataset.CIFAR10 import CIFAR10_Net, train_CIFAR10, test_CIFAR10
 from utils.utils_logs import *
 
 class DistributedNode:
-    def __init__(self, node_id, ip, port, neighbors, dataset, trainloader, testloader, rounds):
+    def __init__(self, node_id, ip, port, neighbors, dataset, model, trainloader, testloader, rounds):
         self.node_id = node_id
         self.ip = ip
         self.port = port
         self.neighbors = neighbors
 
         self.dataset = dataset
-        if self.dataset == "MNIST":
-            self.model = MNIST_Net(num_classes=10)
-        elif self.dataset == "CIFAR-10":
-            self.model = CIFAR10_Net(num_classes=10)
+        self.model = model
         self.trainloader = trainloader
         self.testloader = testloader
         self.rounds = rounds
@@ -40,38 +34,20 @@ class DistributedNode:
     # Model functionalities
     ##################################   
     def get_parameters(self):
-        model_params = [val.cpu().numpy() for _, val in self.model.state_dict().items()]
-        return np.concatenate(model_params, axis=None).ravel()
+        return self.model.get_params()
 
     def set_parameters(self, updated_model):
-        parameters = []
-        init = 0
-        for _, tensor_parameter in self.model.state_dict().items():
-            end = init + tensor_parameter.numel()  # number of elements in tensor
-            recovered_tensor = torch.tensor(updated_model[init:end], dtype=tensor_parameter.dtype)
-            recovered_tensor = recovered_tensor.view(tensor_parameter.shape)
-            parameters.append(recovered_tensor)
-            init = end
-
-        params_dict = zip(self.model.state_dict().keys(), parameters)
-        state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
-        self.model.load_state_dict(state_dict, strict=True)
+        self.model.set_params(updated_model)
         return
 
     # Function to train the local model for one round
     def train_local_model(self, epochs=1):
-        if self.dataset == "MNIST":
-            train_MNIST(self.model, self.trainloader, epochs, None, False)
-        elif self.dataset == "CIFAR-10":
-            train_CIFAR10(self.model, self.trainloader, epochs, None, False)
+        self.model.train_model(self.trainloader, epochs, None, False)
         return 
     
     # Function to evaluate the local model
     def evaluate_local_model(self):
-        if self.dataset == "MNIST":
-            return test_MNIST(self.model, self.testloader, None)
-        elif self.dataset == "CIFAR-10":
-            return test_CIFAR10(self.model, self.testloader, None)
+        return self.model.test_model(self.testloader, None)
 
     ##################################
     # Communication functionalities

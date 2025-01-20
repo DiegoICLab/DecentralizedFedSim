@@ -5,13 +5,14 @@ from utils.utils_logs import *
 from utils.utils_measures import *
 
 class CentralizeClient(DistributedNode):
-    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, trainloader, testloader, rounds, barrier_sim ):
+    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, model, trainloader, testloader, rounds, barrier_sim ):
         super().__init__(
             node_id=node_id,
             ip=ip,
             port=port,
             neighbors=neighbors,
             dataset=dataset,
+            model=model,
             trainloader=trainloader,
             testloader=testloader,
             rounds=rounds

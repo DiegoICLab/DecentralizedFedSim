@@ -12,7 +12,7 @@ from machine_learning.attacks.utils import(
 )
 
 class MaliciousDecentralizeClient(DecentralizeClient):
-    def __init__(self, node_id, ip, port, neighbors, dataset, trainloader, testloader, rounds, aggregation_alg,  
+    def __init__(self, node_id, ip, port, neighbors, dataset, model, trainloader, testloader, rounds, aggregation_alg,  
                  aggregation_config, barrier_sim, byz_attack, attack_config ):
         super().__init__(
             node_id=node_id,
@@ -20,6 +20,7 @@ class MaliciousDecentralizeClient(DecentralizeClient):
             port=port,
             neighbors=neighbors,
             dataset=dataset,
+            model=model,
             trainloader=trainloader,
             testloader=testloader,
             rounds=rounds,

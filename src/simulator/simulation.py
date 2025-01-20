@@ -13,8 +13,10 @@ from typing import Dict, Any
 def decentralized_simulation(
     sim_config: Dict[str, Any], 
     nodes_config: Dict[str, Any], 
+    model_class,
     trainloaders, 
-    valloaders
+    valloaders,
+    **kwargs
     ) -> Dict[str, Any]:
     """
     Simulates a decentralized federated learning process across multiple nodes.
@@ -22,6 +24,7 @@ def decentralized_simulation(
     Args:
         sim_config: General simulation configuration (e.g., global hyperparameters).
         nodes_config: Specific configuration for each node.
+        model_class: Python class of the training algorithm
         trainloaders: List of data loaders for training on each node.
         valloaders: List of data loaders for validation on each node.
 
@@ -42,6 +45,7 @@ def decentralized_simulation(
                 port=value['port'], 
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 dataset=sim_config["dataset"],
+                model=model_class(**kwargs),
                 trainloader=trainloaders[index],
                 testloader=valloaders[index],
                 rounds=sim_config["rounds"],
@@ -59,6 +63,7 @@ def decentralized_simulation(
                 port=value['port'], 
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 dataset=sim_config["dataset"],
+                model=model_class(**kwargs),
                 trainloader=trainloaders[index],
                 testloader=valloaders[index],
                 rounds=sim_config["rounds"],
@@ -100,9 +105,11 @@ def decentralized_simulation(
 def centralized_simulation(
     sim_config: Dict[str, Any], 
     nodes_config: Dict[str, Any], 
+    model_class,
     trainloaders, 
     valloaders,
-    testloader
+    testloader,
+    **kwargs
     ) -> Dict[str, Any]:
     """
     Simulates a centralized federated learning process across multiple nodes and a server.
@@ -110,6 +117,7 @@ def centralized_simulation(
     Args:
         sim_config: General simulation configuration (e.g., global hyperparameters).
         nodes_config: Specific configuration for each node.
+        model_class: Python class of the training algorithm
         trainloaders: List of data loaders for training on each node.
         valloaders: List of data loaders for validation on each node.
         testloader: Data loader for validation on server.
@@ -125,6 +133,7 @@ def centralized_simulation(
         port=server_conf['port'], 
         neighbors= [nodes_config[str(i)] for i in server_conf['neighbors']], 
         dataset=sim_config["dataset"],
+        model=model_class(**kwargs),
         testloader=testloader,
         rounds=sim_config["rounds"],
         aggregation_alg=sim_config["algorithm"],
@@ -145,6 +154,7 @@ def centralized_simulation(
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 server_id=sim_config["server_id"],
                 dataset=sim_config["dataset"],
+                model=model_class(**kwargs),
                 trainloader=trainloaders[index],
                 testloader=valloaders[index],
                 rounds=sim_config["rounds"],
@@ -161,6 +171,7 @@ def centralized_simulation(
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']],
                 server_id=sim_config["server_id"], 
                 dataset=sim_config["dataset"],
+                model=model_class(**kwargs),
                 trainloader=trainloaders[index],
                 testloader=valloaders[index],
                 rounds=sim_config["rounds"],

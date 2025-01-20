@@ -5,7 +5,14 @@ from utils.utils_logs import *
 from machine_learning.dataset.MNIST import load_MNIST
 from machine_learning.dataset.CIFAR10 import load_CIFAR10
 from machine_learning.dataset.utils import prepare_dataset
+from machine_learning.training.MNIST import MNIST_Net
+from machine_learning.training.CIFAR10 import CIFAR10_Net
 from simulator.simulation import centralized_simulation
+
+MODEL_CLASSES = {
+    "MNIST": MNIST_Net,
+    "CIFAR-10": CIFAR10_Net,
+}
 
 def main(args, nodes_config):
 
@@ -52,7 +59,17 @@ def main(args, nodes_config):
         trainset, testset, num_partitions=(len(nodes_config)-1), batch_size_client=32, batch_size_test=128, val_ratio=0.1
     )
     
-    simulation_results = centralized_simulation(sim_config=sim_config, nodes_config=nodes_config, trainloaders=trainloaders, valloaders=valloaders, testloader=testloader)
+    model_class = MODEL_CLASSES.get(sim_config["dataset"])
+    
+    simulation_results = centralized_simulation(
+        sim_config=sim_config, 
+        nodes_config=nodes_config, 
+        model_class=model_class,
+        trainloaders=trainloaders, 
+        valloaders=valloaders, 
+        testloader=testloader, 
+        num_classes=10
+    )
     log_success(simulation_results)
 
     file_name = args.output

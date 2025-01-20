@@ -12,7 +12,7 @@ from machine_learning.attacks.utils import(
 )
 
 class MaliciousCentralizeClient(CentralizeClient):
-    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, trainloader, testloader, rounds, barrier_sim, byz_attack, attack_config ):
+    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, model, trainloader, testloader, rounds, barrier_sim, byz_attack, attack_config ):
         super().__init__(
             node_id=node_id,
             ip=ip,
@@ -20,6 +20,7 @@ class MaliciousCentralizeClient(CentralizeClient):
             neighbors=neighbors,
             server_id=server_id,
             dataset=dataset,
+            model=model,
             trainloader=trainloader,
             testloader=testloader,
             rounds=rounds,

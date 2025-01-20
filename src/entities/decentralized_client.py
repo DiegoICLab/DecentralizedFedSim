@@ -21,7 +21,7 @@ from utils.utils_logs import *
 from utils.utils_measures import *
 
 class DecentralizeClient(DistributedNode):
-    def __init__(self, node_id, ip, port, neighbors, dataset, trainloader, testloader, rounds, aggregation_alg,  
+    def __init__(self, node_id, ip, port, neighbors, dataset, model, trainloader, testloader, rounds, aggregation_alg,  
                  aggregation_config, barrier_sim ):
         super().__init__(
             node_id=node_id,
@@ -29,6 +29,7 @@ class DecentralizeClient(DistributedNode):
             port=port,
             neighbors=neighbors,
             dataset=dataset,
+            model=model,
             trainloader=trainloader,
             testloader=testloader,
             rounds=rounds
