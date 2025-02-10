@@ -24,6 +24,14 @@ def main(args, nodes_config):
         "byz_attack": args.attack,
         "algorithm_config": {},
         "attack_config": {},
+        "gossip_share": False,
+        "conf_nodes": {
+            "num_classes": 10,
+            "epochs": 1,
+            "DEVICE": None,
+            "show_progress": False,
+            "show_results_round": [1]
+        }
     }
 
     if sim_config["byz_attack"] == "IPM":
@@ -65,8 +73,7 @@ def main(args, nodes_config):
         nodes_config=nodes_config, 
         trainloaders=trainloaders, 
         model_class=model_class,
-        valloaders=valloaders, 
-        num_classes=10
+        valloaders=valloaders,
     )
     log_success(simulation_results)
     

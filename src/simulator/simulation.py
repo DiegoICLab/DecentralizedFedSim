@@ -45,15 +45,17 @@ def decentralized_simulation(
                 port=value['port'], 
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 dataset=sim_config["dataset"],
-                model=model_class(**kwargs),
+                model=model_class(sim_config["conf_nodes"]),
                 trainloader=trainloaders[index],
                 testloader=valloaders[index],
                 rounds=sim_config["rounds"],
                 aggregation_alg=sim_config["algorithm"],
                 aggregation_config=sim_config.get("algorithm_config", None),
+                conf_nodes=sim_config["conf_nodes"],
                 barrier_sim=barrier_sim,
+                gossip_share=sim_config["gossip_share"],
                 byz_attack=sim_config["byz_attack"],
-                attack_config=sim_config.get("attack_config", None)
+                attack_config=sim_config.get("attack_config", None),
             )
         else:
             # Create instances of DecentralizeNode
@@ -63,13 +65,15 @@ def decentralized_simulation(
                 port=value['port'], 
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 dataset=sim_config["dataset"],
-                model=model_class(**kwargs),
+                model=model_class(sim_config["conf_nodes"]),
                 trainloader=trainloaders[index],
                 testloader=valloaders[index],
                 rounds=sim_config["rounds"],
                 aggregation_alg=sim_config["algorithm"],
                 aggregation_config=sim_config.get("algorithm_config", None),
-                barrier_sim=barrier_sim
+                conf_nodes=sim_config["conf_nodes"],
+                barrier_sim=barrier_sim,
+                gossip_share=sim_config["gossip_share"]
             )
         
     # Run the training process in separate threads for each node
@@ -136,11 +140,12 @@ def centralized_simulation(
         port=server_conf['port'], 
         neighbors= [nodes_config[str(i)] for i in server_conf['neighbors']], 
         dataset=sim_config["dataset"],
-        model=model_class(**kwargs),
+        model=model_class(sim_config["conf_nodes"]),
         testloader=testloader,
         rounds=sim_config["rounds"],
         aggregation_alg=sim_config["algorithm"],
-        aggregation_config=sim_config.get("algorithm_config", None)
+        aggregation_config=sim_config.get("algorithm_config", None),
+        conf_nodes=sim_config["conf_nodes"]
     )
 
     clients_config = nodes_config.copy()
@@ -157,10 +162,11 @@ def centralized_simulation(
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']], 
                 server_id=sim_config["server_id"],
                 dataset=sim_config["dataset"],
-                model=model_class(**kwargs),
+                model=model_class(sim_config["conf_nodes"]),
                 trainloader=trainloaders[index],
                 testloader=valloaders[index],
                 rounds=sim_config["rounds"],
+                conf_nodes=sim_config["conf_nodes"],
                 barrier_sim=barrier_sim,
                 byz_attack=sim_config["byz_attack"],
                 attack_config=sim_config.get("attack_config", None)
@@ -174,10 +180,11 @@ def centralized_simulation(
                 neighbors= [nodes_config[str(i)] for i in value['neighbors']],
                 server_id=sim_config["server_id"], 
                 dataset=sim_config["dataset"],
-                model=model_class(**kwargs),
+                model=model_class(sim_config["conf_nodes"]),
                 trainloader=trainloaders[index],
                 testloader=valloaders[index],
                 rounds=sim_config["rounds"],
+                conf_nodes=sim_config["conf_nodes"],
                 barrier_sim=barrier_sim
             )
         

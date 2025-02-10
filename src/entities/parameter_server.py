@@ -22,7 +22,7 @@ from utils.utils_measures import *
 
 class ParameterServer(DistributedNode):
     def __init__(self, node_id, ip, port, neighbors, dataset, model, testloader, rounds, aggregation_alg,  
-                 aggregation_config ):
+                 aggregation_config, conf_nodes ):
         super().__init__(
             node_id=node_id,
             ip=ip,
@@ -32,7 +32,8 @@ class ParameterServer(DistributedNode):
             model=model,
             trainloader=None,
             testloader=testloader,
-            rounds=rounds
+            rounds=rounds,
+            conf_nodes=conf_nodes
         )
         self.aggregation_alg = aggregation_alg
         self.aggregation_config = aggregation_config

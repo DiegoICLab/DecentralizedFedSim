@@ -9,7 +9,7 @@ from queue import Queue
 from utils.utils_logs import *
 
 class DistributedNode:
-    def __init__(self, node_id, ip, port, neighbors, dataset, model, trainloader, testloader, rounds):
+    def __init__(self, node_id, ip, port, neighbors, dataset, model, trainloader, testloader, rounds, conf_nodes):
         self.node_id = node_id
         self.ip = ip
         self.port = port
@@ -20,6 +20,8 @@ class DistributedNode:
         self.trainloader = trainloader
         self.testloader = testloader
         self.rounds = rounds
+        self.conf_nodes = conf_nodes
+        self.conf_nodes['node_id'] = self.node_id
         
         self.model_queue = Queue()  # Queue to store received models
         self.listener_thread = None
@@ -38,13 +40,13 @@ class DistributedNode:
         return
 
     # Function to train the local model for one round
-    def train_local_model(self, epochs=1):
-        self.model.train_model(self.trainloader, epochs, None, False)
+    def train_local_model(self):
+        self.model.train_model(self.trainloader, self.conf_nodes)
         return 
     
     # Function to evaluate the local model
     def evaluate_local_model(self):
-        return self.model.test_model(self.testloader, None)
+        return self.model.test_model(self.testloader, self.conf_nodes)
 
     ##################################
     # Communication functionalities

@@ -22,7 +22,7 @@ from utils.utils_measures import *
 
 class DecentralizeClient(DistributedNode):
     def __init__(self, node_id, ip, port, neighbors, dataset, model, trainloader, testloader, rounds, aggregation_alg,  
-                 aggregation_config, barrier_sim ):
+                 aggregation_config, conf_nodes, barrier_sim, gossip_share ):
         super().__init__(
             node_id=node_id,
             ip=ip,
@@ -32,11 +32,13 @@ class DecentralizeClient(DistributedNode):
             model=model,
             trainloader=trainloader,
             testloader=testloader,
-            rounds=rounds
+            rounds=rounds,
+            conf_nodes=conf_nodes
         )
         self.barrier_sim = barrier_sim
         self.aggregation_alg = aggregation_alg
         self.aggregation_config = aggregation_config
+        self.gossip_share = gossip_share
 
         self.previous_neighbor_models = {}
         self.temporal_metrics = {
@@ -51,7 +53,7 @@ class DecentralizeClient(DistributedNode):
         for round_num in range(self.rounds):
             # Training phase
             log_info_node(self.node_id, f"Round {round_num}. Starting training process...")
-            self.train_local_model(epochs=1)
+            self.train_local_model()
 
             # Wait for all nodes to finish the training phase
             log_info_node(self.node_id, f"Training finished. Waiting for other nodes to complete training...")
@@ -59,15 +61,24 @@ class DecentralizeClient(DistributedNode):
 
             # Send the model to neighbors
             log_info_node(self.node_id, f"Sending model to neighbors...")
-            for neighbor in self.neighbors:
-                self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
+            if self.gossip_share == False:
+                for neighbor in self.neighbors:
+                    self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
+            else:
+                # Gossip sharing
+                random_neighbor = np.random.choice(self.neighbors)
+                self.send_model(random_neighbor['ip'], random_neighbor['port'], self.get_parameters(), round_num)
 
             # Simulate sharing time interval
             # With this simulated time sharing, model sharing must be reciprocal
+            wait = 2
             while True:
+                if wait == 0:
+                    break
                 time.sleep(5)
                 if self.get_num_updates_queue() == len(self.neighbors):
                     break
+                wait -= 1
 
             # Get all received models in this round
             received_updates = self.get_all_updates_from_queue()
@@ -80,8 +91,8 @@ class DecentralizeClient(DistributedNode):
 
             # Save the model stats (optional)
             self.save_statistics()
-            if self.node_id == 1:
-                log_info("Showing results of this round of node 1 as an example:")
+            if self.node_id in self.conf_nodes["show_results_round"]:
+                log_info(f"Showing results of this round of node {self.node_id} as an example:")
                 for key, value in self.statistics.items():
                     acc = self.statistics[key][-1]
                     log_info(f"{key}: {acc}")

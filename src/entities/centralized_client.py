@@ -5,7 +5,7 @@ from utils.utils_logs import *
 from utils.utils_measures import *
 
 class CentralizeClient(DistributedNode):
-    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, model, trainloader, testloader, rounds, barrier_sim ):
+    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, model, trainloader, testloader, rounds, conf_nodes, barrier_sim ):
         super().__init__(
             node_id=node_id,
             ip=ip,
@@ -15,7 +15,8 @@ class CentralizeClient(DistributedNode):
             model=model,
             trainloader=trainloader,
             testloader=testloader,
-            rounds=rounds
+            rounds=rounds,
+            conf_nodes=conf_nodes
         )
         self.server_id=server_id
         self.barrier_sim = barrier_sim
@@ -27,7 +28,7 @@ class CentralizeClient(DistributedNode):
         for round_num in range(self.rounds):
             # Training phase
             log_info_node(self.node_id, f"Round {round_num}. Starting training process...")
-            self.train_local_model(epochs=1)
+            self.train_local_model()
 
             # Wait for all client to finish the training phase
             log_info_node(self.node_id, f"Training finished. Waiting for other clients to complete training...")

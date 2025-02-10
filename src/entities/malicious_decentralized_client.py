@@ -1,4 +1,5 @@
 import time
+import numpy as np
 
 from entities.decentralized_client import DecentralizeClient
 from utils.utils_logs import *
@@ -13,7 +14,7 @@ from machine_learning.attacks.utils import(
 
 class MaliciousDecentralizeClient(DecentralizeClient):
     def __init__(self, node_id, ip, port, neighbors, dataset, model, trainloader, testloader, rounds, aggregation_alg,  
-                 aggregation_config, barrier_sim, byz_attack, attack_config ):
+                 aggregation_config, conf_nodes, barrier_sim, gossip_share, byz_attack, attack_config ):
         super().__init__(
             node_id=node_id,
             ip=ip,
@@ -26,7 +27,9 @@ class MaliciousDecentralizeClient(DecentralizeClient):
             rounds=rounds,
             aggregation_alg=aggregation_alg,
             aggregation_config=aggregation_config,
-            barrier_sim=barrier_sim
+            conf_nodes=conf_nodes,
+            barrier_sim=barrier_sim,
+            gossip_share=gossip_share
         )
         self.byz_attack = byz_attack
         self.attack_config = attack_config
@@ -43,7 +46,7 @@ class MaliciousDecentralizeClient(DecentralizeClient):
         for round_num in range(self.rounds):
             log_info_node(self.node_id, f"Round {round_num}. Starting training process...")
             # Train the model locally
-            self.train_local_model(epochs=1)
+            self.train_local_model()
 
             # Wait for all nodes to finish the training round
             log_info_node(self.node_id, f"Training finished. Waiting for other nodes to complete training...")
@@ -59,8 +62,24 @@ class MaliciousDecentralizeClient(DecentralizeClient):
 
             log_info_node(self.node_id, f"Sending poisoned model to neighbors...")
             # Send the model to neighbors
-            for neighbor in self.neighbors:
-                self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
+            if self.gossip_share == False:
+                for neighbor in self.neighbors:
+                    self.send_model(neighbor['ip'], neighbor['port'], self.get_parameters(), round_num)
+            else:
+                # Gossip sharing
+                random_neighbor = np.random.choice(self.neighbors)
+                self.send_model(random_neighbor['ip'], random_neighbor['port'], self.get_parameters(), round_num)
+            
+            # Simulate sharing time interval
+            # With this simulated time sharing, model sharing must be reciprocal
+            wait = 2
+            while True:
+                if wait == 0:
+                    break
+                time.sleep(5)
+                if self.get_num_updates_queue() == len(self.neighbors):
+                    break
+                wait -= 1
             
             # Aggregate the received models into the local model
             num_received_models = len(received_updates)
@@ -71,8 +90,8 @@ class MaliciousDecentralizeClient(DecentralizeClient):
 
             # Save the model stats (optional)
             self.save_statistics()
-            if self.node_id == 1:
-                log_info("Showing results of this round of node 1 as an example:")
+            if self.node_id in self.conf_nodes["show_results_round"]:
+                log_info(f"Showing results of this round of node {self.node_id} as an example:")
                 for key, value in self.statistics.items():
                     acc = self.statistics[key][-1]
                     log_info(f"{key}: {acc}")

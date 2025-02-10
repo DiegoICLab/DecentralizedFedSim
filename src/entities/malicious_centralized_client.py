@@ -12,7 +12,7 @@ from machine_learning.attacks.utils import(
 )
 
 class MaliciousCentralizeClient(CentralizeClient):
-    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, model, trainloader, testloader, rounds, barrier_sim, byz_attack, attack_config ):
+    def __init__(self, node_id, ip, port, neighbors, server_id, dataset, model, trainloader, testloader, rounds, conf_nodes, barrier_sim, byz_attack, attack_config ):
         super().__init__(
             node_id=node_id,
             ip=ip,
@@ -24,6 +24,7 @@ class MaliciousCentralizeClient(CentralizeClient):
             trainloader=trainloader,
             testloader=testloader,
             rounds=rounds,
+            conf_nodes=conf_nodes,
             barrier_sim=barrier_sim
         )
         self.byz_attack = byz_attack
@@ -41,7 +42,7 @@ class MaliciousCentralizeClient(CentralizeClient):
         for round_num in range(self.rounds):
             # Training phase
             log_info_node(self.node_id, f"Round {round_num}. Starting training process...")
-            self.train_local_model(epochs=1)
+            self.train_local_model()
 
             # Wait for all client to finish the training phase
             log_info_node(self.node_id, f"Training finished. Waiting for other clients to complete training...")

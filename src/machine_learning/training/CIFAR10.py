@@ -17,14 +17,14 @@ class CIFAR10_Net(nn.Module):
     """Model (simple CNN adapted from 'PyTorch: 
     A 60 Minute Blitz')"""
     
-    def __init__(self, num_classes: int) -> None:   # 62006 parameters with 10 classes
+    def __init__(self, conf) -> None:   # 62006 parameters with 10 classes
         super(CIFAR10_Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)           # Convolutional layer with 3 input channels, 6 output channels, and a 5x5 kernel size.
-        self.pool = nn.MaxPool2d(2, 2)            # Max pooling layer with a 2x2 kernel size and a stride of 2.
-        self.conv2 = nn.Conv2d(6, 16, 5)          # Convolutional layer with 6 input channels, 16 output channels, and a 5x5 kernel size.
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)     # Fully connected layer with 1655 input nodes and 120 output nodes.
-        self.fc2 = nn.Linear(120, 84)             # Fully connected layer with 120 input nodes and 84 output nodes.
-        self.fc3 = nn.Linear(84, num_classes)     # Fully connected layer with 84 input nodes and 10 output nodes. In classification problems, this layer usually has the same number of nodes as the number of classes.
+        self.conv1 = nn.Conv2d(3, 6, 5)                 # Convolutional layer with 3 input channels, 6 output channels, and a 5x5 kernel size.
+        self.pool = nn.MaxPool2d(2, 2)                  # Max pooling layer with a 2x2 kernel size and a stride of 2.
+        self.conv2 = nn.Conv2d(6, 16, 5)                # Convolutional layer with 6 input channels, 16 output channels, and a 5x5 kernel size.
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)           # Fully connected layer with 1655 input nodes and 120 output nodes.
+        self.fc2 = nn.Linear(120, 84)                   # Fully connected layer with 120 input nodes and 84 output nodes.
+        self.fc3 = nn.Linear(84, conf["num_classes"])   # Fully connected layer with 84 input nodes and 10 output nodes. In classification problems, this layer usually has the same number of nodes as the number of classes.
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:     # How the data flows through the network from input to output.
         x = self.pool(F.relu(self.conv1(x)))                # Process the input x through the first convolutional layer, applying the ReLU activation function, followed by max pooling.
@@ -53,34 +53,35 @@ class CIFAR10_Net(nn.Module):
         self.load_state_dict(state_dict, strict=True)
         return
     
-    def train_model(self, trainloader, epochs, DEVICE, show_progress):
+    def train_model(self, trainloader, conf):
         """Train the model on the training set."""
+        
         loss_fn = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
         self.train()
-        for _ in range(epochs):
-            if show_progress is True:
+        for _ in range(conf["epochs"]):
+            if conf["show_progress"] is True:
                 trainloader_aux = tqdm(trainloader)
             else:
                 trainloader_aux = trainloader
             for images, labels in trainloader_aux:
                 optimizer.zero_grad()
-                if DEVICE is not None:
-                    loss_fn(self(images.to(DEVICE)), labels.to(DEVICE)).backward()
+                if conf["DEVICE"] is not None:
+                    loss_fn(self(images.to(conf["DEVICE"])), labels.to(conf["DEVICE"])).backward()
                 else:
                     loss_fn(self(images), labels).backward()
                 optimizer.step()
 
-    def test_model(self, testloader, DEVICE):
+    def test_model(self, testloader, conf):
         """Validate the model on the test set."""
         loss_fn = torch.nn.CrossEntropyLoss()
         correct, loss = 0, 0.0
         self.eval()
         with torch.no_grad():
             for images, labels in testloader:
-                if DEVICE is not None:
-                    outputs = self(images.to(DEVICE))
-                    labels = labels.to(DEVICE)
+                if conf["DEVICE"] is not None:
+                    outputs = self(images.to(conf["DEVICE"]))
+                    labels = labels.to(conf["DEVICE"])
                 else:
                     outputs = self(images)
                 loss += loss_fn(outputs, labels).item()
