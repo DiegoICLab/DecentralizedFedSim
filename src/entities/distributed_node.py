@@ -20,7 +20,7 @@ class DistributedNode:
         self.trainloader = trainloader
         self.testloader = testloader
         self.rounds = rounds
-        self.conf_nodes = conf_nodes
+        self.conf_nodes = conf_nodes.copy()
         self.conf_nodes['node_id'] = self.node_id
         
         self.model_queue = Queue()  # Queue to store received models
