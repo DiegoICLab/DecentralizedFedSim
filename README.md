@@ -96,3 +96,16 @@ This project is licensed under the GNU GPLv3 License. See the LICENSE file for m
 ## Contact
 
 For questions or suggestions, contact the author at dcajaraville@det.uvigo.es.
+
+## Reference to the Paper
+
+This code was originally presented in the following publication:
+> **Diego Cajaraville-Aboy and Ana Fernández-Vilas and Rebeca P. Díaz-Redondo and Manuel Fernández-Veiga** (2024). *Byzantine-Robust Aggregation for Securing Decentralized Federated Learning*. **Pre-print**.  
+> **DOI:** [10.48550/arXiv.2409.17754](https://arxiv.org/abs/2409.17754)
+
+If you use or modify this code in your research, please cite the paper to acknowledge the original work.
+
+## ACKNOWLEDGMENT
+
+This work was supported by the Spanish Government under research project ``Enhancing Communication Protocols with Machine Learning while Protecting Sensitive Data ([COMPROMISE](http://www.compromise.upc.edu/))" PID2020-113795RB-C32/C33, funded by MICIU/AEI/10.13039/501100011033.
+![alt text](http://www.compromise.upc.edu/images/MICIU+AEI-COMPROMISE.jpg)

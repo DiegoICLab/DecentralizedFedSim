@@ -201,9 +201,3 @@ def centralized_simulation(
 
     simulation_results = nodes[sim_config["server_id"]].statistics
     return simulation_results
-    # simulation_results = {
-    #     "accuracy": nodes[sim_config["server_id"]].statistics["accuracy"],
-    #     "loss": nodes[sim_config["server_id"]].statistics["loss"]
-    # }
-    
-    # return simulation_results
