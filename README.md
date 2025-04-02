@@ -2,6 +2,11 @@
 
 This project aims to simulate environments for **Decentralized Federated Learning** (DFL), a distributed learning technique where multiple nodes collaborate among them (without a central server) to train a Machine Learning model without sharing their local data. The simulation allows exploration of various network topologies, model aggregation strategies, and robustness against malicious nodes.
 
+This repository has been migrated to the following link:
+```url
+https://gitlab.com/compromise3/decentralizedfedsim
+```
+
 ## Project Structure
 
 - **/config**: Configuration files for the simulation (communication network).
